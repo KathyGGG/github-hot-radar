@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub 热点雷达</title>
+    <meta
+      name="description"
+      content="每天自动更新 GitHub 最高星级项目与最新涌现的热点仓库。"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb bg-orb--one"></div>
+    <div class="bg-orb bg-orb--two"></div>
+
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="./">
+          <span class="brand__mark">GH</span>
+          <span>
+            <strong>热点雷达</strong>
+            <small>GitHub Daily Product Feed</small>
+          </span>
+        </a>
+
+        <div class="topbar__meta">
+          <span class="topbar__badge">每日自动更新</span>
+          <a class="topbar__link" href="#boards">查看榜单</a>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="hero">
+          <div class="hero__content">
+            <p class="eyebrow">SHIP FASTER WITH SIGNAL</p>
+            <h1>每天看见 GitHub 上最值得追的项目</h1>
+            <p class="hero__text">
+              一个更像产品的开源发现页：既能看到长期最强的明星仓库，也能追踪最近冒头、正在升温的新项目。
+            </p>
+
+            <div class="hero__actions">
+              <button id="refreshButton" class="button button--primary" type="button">
+                刷新今日数据
+              </button>
+              <a class="button button--secondary" href="#boards">浏览榜单</a>
+            </div>
+
+            <div class="hero__status">
+              <span id="generatedAt" class="status-pill">正在加载最新榜单...</span>
+              <span class="status-pill status-pill--soft">来源：GitHub Search API</span>
+            </div>
+          </div>
+
+          <aside class="hero__panel">
+            <div class="hero__panel-header">
+              <p class="hero__panel-eyebrow">Today Snapshot</p>
+              <h2>产品化看板</h2>
+            </div>
+
+            <div class="summary-grid">
+              <article class="summary-card">
+                <span class="summary-card__label">展示仓库</span>
+                <strong id="summaryCount">--</strong>
+              </article>
+              <article class="summary-card">
+                <span class="summary-card__label">热门语言</span>
+                <strong id="summaryLanguage">--</strong>
+              </article>
+              <article class="summary-card">
+                <span class="summary-card__label">新项目窗口</span>
+                <strong>14 天</strong>
+              </article>
+              <article class="summary-card">
+                <span class="summary-card__label">最高星标</span>
+                <strong id="summaryStars">--</strong>
+              </article>
+            </div>
+          </aside>
+        </section>
+
+        <section class="control-bar">
+          <div class="search-box">
+            <label class="search-box__label" for="searchInput">搜索项目 / 作者 / 描述</label>
+            <input
+              id="searchInput"
+              class="search-box__input"
+              type="search"
+              placeholder="例如：agent、rust、openai、tooling"
+            />
+          </div>
+
+          <div class="filters">
+            <span class="filters__label">语言筛选</span>
+            <div id="languageFilters" class="chip-group"></div>
+          </div>
+        </section>
+
+        <section class="spotlight">
+          <div class="section-heading">
+            <div>
+              <p class="section-heading__eyebrow">Spotlight</p>
+              <h2>今日焦点</h2>
+            </div>
+            <p class="section-heading__desc">把两个榜单里最值得先点开的项目先推到前面。</p>
+          </div>
+          <div id="spotlightGrid" class="spotlight-grid"></div>
+        </section>
+
+        <section id="boards" class="boards">
+          <div class="section-heading">
+            <div>
+              <p class="section-heading__eyebrow">Boards</p>
+              <h2>双榜单总览</h2>
+            </div>
+            <p class="section-heading__desc">
+              左边看长期统治力，右边看新项目势能。搜索和语言筛选会同时作用于两个榜单。
+            </p>
+          </div>
+
+          <div class="boards__grid">
+            <section class="board">
+              <div class="board__header">
+                <div>
+                  <p class="board__eyebrow">Top Ranked</p>
+                  <h3>最高星级项目</h3>
+                </div>
+                <span id="topBoardCount" class="board__count">0 个结果</span>
+              </div>
+              <div id="topStarredList" class="project-grid" aria-live="polite"></div>
+            </section>
+
+            <section class="board">
+              <div class="board__header">
+                <div>
+                  <p class="board__eyebrow">Fresh & Rising</p>
+                  <h3>最新热点项目</h3>
+                </div>
+                <span id="risingBoardCount" class="board__count">0 个结果</span>
+              </div>
+              <div id="risingList" class="project-grid" aria-live="polite"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="projectCardTemplate">
+      <article class="project-card">
+        <div class="project-card__top">
+          <div class="project-card__identity">
+            <img class="project-card__avatar" alt="" />
+            <div>
+              <p class="project-card__repo"></p>
+              <p class="project-card__owner-name"></p>
+            </div>
+          </div>
+          <span class="project-card__rank"></span>
+        </div>
+
+        <p class="project-card__desc"></p>
+
+        <div class="project-card__stats">
+          <span class="stat-pill stat-pill--star"></span>
+          <span class="stat-pill stat-pill--fork"></span>
+          <span class="stat-pill stat-pill--lang"></span>
+        </div>
+
+        <div class="project-card__footer">
+          <span class="project-card__created"></span>
+          <span class="project-card__updated"></span>
+        </div>
+
+        <a class="project-card__link" target="_blank" rel="noreferrer">打开 GitHub</a>
+      </article>
+    </template>
+
+    <template id="spotlightCardTemplate">
+      <article class="spotlight-card">
+        <div class="spotlight-card__header">
+          <span class="spotlight-card__type"></span>
+          <a class="spotlight-card__link" target="_blank" rel="noreferrer">查看项目</a>
+        </div>
+        <h3 class="spotlight-card__title"></h3>
+        <p class="spotlight-card__desc"></p>
+        <div class="spotlight-card__stats"></div>
+      </article>
+    </template>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

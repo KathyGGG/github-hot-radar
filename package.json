@@ -1,0 +1,10 @@
+{
+  "name": "github-hot-radar",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "update:data": "node scripts/update-data.mjs",
+    "serve": "node scripts/serve.mjs"
+  }
+}
