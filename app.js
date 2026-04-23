@@ -1,4 +1,4 @@
-const DATA_URL = "./data/projects.json";
+const DATA_URL = "./projects.json";
 
 const state = {
   payload: null,
