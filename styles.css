@@ -1,6 +1,5 @@
 :root {
   --bg: #08111f;
-  --bg-soft: #101d31;
   --panel: rgba(11, 23, 40, 0.78);
   --panel-strong: rgba(14, 28, 47, 0.92);
   --line: rgba(163, 188, 255, 0.14);
@@ -185,7 +184,7 @@ input {
 
 .hero__text {
   margin: 18px 0 0;
-  max-width: 640px;
+  max-width: 700px;
   color: var(--muted);
   font-size: 18px;
   line-height: 1.8;
@@ -402,15 +401,30 @@ input {
 }
 
 .spotlight-card__type,
-.project-card__rank {
+.project-card__rank,
+.badge {
   display: inline-flex;
   align-items: center;
   min-height: 34px;
   padding: 0 12px;
   border-radius: 999px;
+  font-size: 13px;
+}
+
+.spotlight-card__type,
+.project-card__rank {
   background: rgba(118, 241, 198, 0.12);
   color: var(--accent-2);
-  font-size: 13px;
+}
+
+.badge--category {
+  background: rgba(87, 208, 255, 0.12);
+  color: #ccf2ff;
+}
+
+.badge--country {
+  background: rgba(255, 209, 102, 0.16);
+  color: #ffe29a;
 }
 
 .spotlight-card__title {
@@ -418,10 +432,16 @@ input {
   font-size: 24px;
 }
 
-.spotlight-card__desc {
+.spotlight-card__desc,
+.spotlight-card__desc-zh {
   margin: 0;
   color: var(--muted);
   line-height: 1.7;
+}
+
+.spotlight-card__desc-zh,
+.project-card__desc-zh {
+  color: #dce6ff;
 }
 
 .spotlight-card__stats {
@@ -478,10 +498,52 @@ input {
   font-size: 14px;
 }
 
-.project-card__desc {
+.project-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.project-card__desc,
+.project-card__desc-zh {
   margin: 0;
-  color: var(--muted);
   line-height: 1.7;
+}
+
+.project-card__desc {
+  color: var(--muted);
+}
+
+.project-card__author {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 209, 102, 0.16);
+}
+
+.project-card__author-title,
+.project-card__author-name,
+.project-card__author-bio {
+  margin: 0;
+}
+
+.project-card__author-title {
+  color: #ffd166;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-card__author-name {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.project-card__author-bio {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .project-card__stats {

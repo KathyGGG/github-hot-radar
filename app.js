@@ -1,9 +1,9 @@
-const DATA_URL = "./projects.json";
+const DATA_URL = "./data/projects.json";
 
 const state = {
   payload: null,
   search: "",
-  language: "all",
+  category: "all",
 };
 
 const topStarredList = document.querySelector("#topStarredList");
@@ -12,9 +12,10 @@ const spotlightGrid = document.querySelector("#spotlightGrid");
 const generatedAt = document.querySelector("#generatedAt");
 const refreshButton = document.querySelector("#refreshButton");
 const searchInput = document.querySelector("#searchInput");
-const languageFilters = document.querySelector("#languageFilters");
+const categoryFilters = document.querySelector("#categoryFilters");
 const summaryCount = document.querySelector("#summaryCount");
 const summaryLanguage = document.querySelector("#summaryLanguage");
+const summaryChinaOwners = document.querySelector("#summaryChinaOwners");
 const summaryStars = document.querySelector("#summaryStars");
 const topBoardCount = document.querySelector("#topBoardCount");
 const risingBoardCount = document.querySelector("#risingBoardCount");
@@ -43,7 +44,16 @@ function getCombinedProjects(payload) {
 }
 
 function normalizeText(project) {
-  return [project.fullName, project.owner, project.description, project.language]
+  return [
+    project.fullName,
+    project.owner,
+    project.description,
+    project.descriptionZh,
+    project.language,
+    project.categoryLabel,
+    project.ownerProfile?.displayNameZh,
+    project.ownerProfile?.bioZh,
+  ]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -53,10 +63,10 @@ function filterProjects(projects) {
   return projects.filter((project) => {
     const matchesSearch =
       !state.search || normalizeText(project).includes(state.search);
-    const matchesLanguage =
-      state.language === "all" || (project.language || "Unknown") === state.language;
+    const matchesCategory =
+      state.category === "all" || project.categoryLabel === state.category;
 
-    return matchesSearch && matchesLanguage;
+    return matchesSearch && matchesCategory;
   });
 }
 
@@ -72,19 +82,37 @@ function renderProjectCards(target, projects, typeLabel) {
 
   projects.forEach((project, index) => {
     const node = projectTemplate.content.firstElementChild.cloneNode(true);
+    const countryBadge = node.querySelector(".badge--country");
+    const authorBlock = node.querySelector(".project-card__author");
+    const ownerProfile = project.ownerProfile || {};
+
     node.querySelector(".project-card__avatar").src = project.ownerAvatarUrl;
     node.querySelector(".project-card__avatar").alt = `${project.owner} avatar`;
     node.querySelector(".project-card__repo").textContent = project.fullName;
     node.querySelector(".project-card__owner-name").textContent = `@${project.owner}`;
     node.querySelector(".project-card__rank").textContent = `${typeLabel} #${index + 1}`;
+    node.querySelector(".badge--category").textContent = project.categoryLabel || "未分类";
     node.querySelector(".project-card__desc").textContent =
-      project.description || "这个项目暂时没有提供描述。";
+      project.description || "这个项目暂时没有提供英文描述。";
+    node.querySelector(".project-card__desc-zh").textContent =
+      project.descriptionZh || "暂无中文翻译。";
     node.querySelector(".stat-pill--star").textContent = `★ ${formatCount(project.stars)}`;
     node.querySelector(".stat-pill--fork").textContent = `Fork ${formatCount(project.forks)}`;
     node.querySelector(".stat-pill--lang").textContent = project.language || "Unknown";
     node.querySelector(".project-card__created").textContent = `创建于 ${formatDate(project.createdAt)}`;
     node.querySelector(".project-card__updated").textContent = `更新于 ${formatDate(project.updatedAt)}`;
     node.querySelector(".project-card__link").href = project.url;
+
+    if (ownerProfile.isFromChina) {
+      countryBadge.hidden = false;
+      countryBadge.textContent = "中国作者";
+      authorBlock.hidden = false;
+      node.querySelector(".project-card__author-name").textContent =
+        ownerProfile.displayNameZh || ownerProfile.displayName || project.owner;
+      node.querySelector(".project-card__author-bio").textContent =
+        ownerProfile.bioZh || "来自中国开发者社区，更多背景资料待补充。";
+    }
+
     fragment.appendChild(node);
   });
 
@@ -107,10 +135,12 @@ function renderSpotlights(topStarred, rising) {
 
   picks.forEach(({ project, label }) => {
     const node = spotlightTemplate.content.firstElementChild.cloneNode(true);
-    node.querySelector(".spotlight-card__type").textContent = label;
+    node.querySelector(".spotlight-card__type").textContent = `${label} · ${project.categoryLabel || "未分类"}`;
     node.querySelector(".spotlight-card__title").textContent = project.fullName;
     node.querySelector(".spotlight-card__desc").textContent =
-      project.description || "这个项目暂时没有提供描述。";
+      project.description || "这个项目暂时没有提供英文描述。";
+    node.querySelector(".spotlight-card__desc-zh").textContent =
+      project.descriptionZh || "暂无中文翻译。";
     node.querySelector(".spotlight-card__link").href = project.url;
     node.querySelector(".spotlight-card__stats").innerHTML = [
       `★ ${formatCount(project.stars)}`,
@@ -125,24 +155,22 @@ function renderSpotlights(topStarred, rising) {
   spotlightGrid.appendChild(fragment);
 }
 
-function renderLanguageFilters(payload) {
-  const languages = Array.from(
+function renderCategoryFilters(payload) {
+  const categories = Array.from(
     new Set(
       getCombinedProjects(payload)
-        .map((project) => project.language || "Unknown")
+        .map((project) => project.categoryLabel || "未分类")
         .filter(Boolean)
     )
-  )
-    .sort((a, b) => a.localeCompare(b))
-    .slice(0, 10);
+  ).sort((a, b) => a.localeCompare(b, "zh-CN"));
 
-  const options = ["all", ...languages];
+  const options = ["all", ...categories];
 
-  languageFilters.innerHTML = options
-    .map((language) => {
-      const label = language === "all" ? "全部" : language;
-      const active = state.language === language ? " chip--active" : "";
-      return `<button class="chip${active}" type="button" data-language="${language}">${label}</button>`;
+  categoryFilters.innerHTML = options
+    .map((category) => {
+      const label = category === "all" ? "全部" : category;
+      const active = state.category === category ? " chip--active" : "";
+      return `<button class="chip${active}" type="button" data-category="${category}">${label}</button>`;
     })
     .join("");
 }
@@ -150,6 +178,7 @@ function renderLanguageFilters(payload) {
 function renderSummary(payload) {
   const combined = getCombinedProjects(payload);
   const languageCount = new Map();
+  const chinaOwners = combined.filter((project) => project.ownerProfile?.isFromChina).length;
 
   combined.forEach((project) => {
     const language = project.language || "Unknown";
@@ -165,6 +194,7 @@ function renderSummary(payload) {
 
   summaryCount.textContent = String(combined.length);
   summaryLanguage.textContent = hottestLanguage;
+  summaryChinaOwners.textContent = String(chinaOwners);
   summaryStars.textContent = formatCount(maxStars);
 }
 
@@ -202,7 +232,7 @@ async function loadData() {
     generatedAt.textContent = `最近更新：${formatDateTime(state.payload.generatedAt)}`;
 
     renderSummary(state.payload);
-    renderLanguageFilters(state.payload);
+    renderCategoryFilters(state.payload);
     renderBoards();
   } catch (error) {
     generatedAt.textContent = "数据加载失败";
@@ -225,14 +255,14 @@ searchInput.addEventListener("input", (event) => {
   renderBoards();
 });
 
-languageFilters.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-language]");
+categoryFilters.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-category]");
   if (!button) {
     return;
   }
 
-  state.language = button.dataset.language;
-  renderLanguageFilters(state.payload);
+  state.category = button.dataset.category;
+  renderCategoryFilters(state.payload);
   renderBoards();
 });
 

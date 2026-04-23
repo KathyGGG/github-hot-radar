@@ -1,9 +1,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { enrichProject } from "./project-enrichment.mjs";
 
 const OUTPUT_PATH = resolve("data", "projects.json");
 const API_URL = "https://api.github.com/search/repositories";
 const PER_PAGE = 12;
+const ownerCache = new Map();
 
 function daysAgo(days) {
   const date = new Date();
@@ -47,6 +49,7 @@ async function fetchRepositories(query, sort) {
     name: item.name,
     fullName: item.full_name,
     owner: item.owner?.login ?? "unknown",
+    ownerType: item.owner?.type ?? "User",
     ownerAvatarUrl: item.owner?.avatar_url ?? "",
     description: item.description ?? "",
     url: item.html_url,
@@ -58,21 +61,67 @@ async function fetchRepositories(query, sort) {
   }));
 }
 
+async function fetchOwnerProfile(owner, ownerType = "User") {
+  const cacheKey = `${ownerType}:${owner}`;
+  if (ownerCache.has(cacheKey)) {
+    return ownerCache.get(cacheKey);
+  }
+
+  const profileUrl = new URL(
+    ownerType === "Organization"
+      ? `https://api.github.com/orgs/${owner}`
+      : `https://api.github.com/users/${owner}`
+  );
+
+  const response = await fetch(profileUrl, {
+    headers: buildHeaders(),
+  });
+
+  if (!response.ok) {
+    ownerCache.set(cacheKey, {});
+    return {};
+  }
+
+  const data = await response.json();
+  const profile = {
+    name: data.name ?? "",
+    bio: data.bio ?? "",
+    location: data.location ?? "",
+    blog: data.blog ?? "",
+    company: data.company ?? "",
+  };
+
+  ownerCache.set(cacheKey, profile);
+  return profile;
+}
+
+async function enrichRepositories(projects) {
+  return Promise.all(
+    projects.map(async (project) => {
+      const ownerProfile = await fetchOwnerProfile(project.owner, project.ownerType);
+      return enrichProject(project, ownerProfile);
+    })
+  );
+}
+
 async function main() {
+  const rawTopStarred = await fetchRepositories(
+    "stars:>50000 archived:false mirror:false",
+    "stars"
+  );
+  const rawRising = await fetchRepositories(
+    `created:>=${daysAgo(14)} stars:>50 archived:false mirror:false`,
+    "stars"
+  );
+
   const payload = {
     generatedAt: new Date().toISOString(),
     criteria: {
       topStarred: "stars:>50000 archived:false mirror:false",
       rising: `created:>=${daysAgo(14)} stars:>50 archived:false mirror:false`,
     },
-    topStarred: await fetchRepositories(
-      "stars:>50000 archived:false mirror:false",
-      "stars"
-    ),
-    rising: await fetchRepositories(
-      `created:>=${daysAgo(14)} stars:>50 archived:false mirror:false`,
-      "stars"
-    ),
+    topStarred: await enrichRepositories(rawTopStarred),
+    rising: await enrichRepositories(rawRising),
   };
 
   await mkdir(dirname(OUTPUT_PATH), { recursive: true });

@@ -6,7 +6,7 @@
     <title>GitHub 热点雷达</title>
     <meta
       name="description"
-      content="每天自动更新 GitHub 最高星级项目与最新涌现的热点仓库。"
+      content="每天自动更新 GitHub 最高星级项目、最新热点项目，并附中文翻译、作者背景和标签分类。"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -36,7 +36,7 @@
             <p class="eyebrow">SHIP FASTER WITH SIGNAL</p>
             <h1>每天看见 GitHub 上最值得追的项目</h1>
             <p class="hero__text">
-              一个更像产品的开源发现页：既能看到长期最强的明星仓库，也能追踪最近冒头、正在升温的新项目。
+              不只是看榜单。每个项目都会补上中文翻译、中文标签，以及中国作者的中文名和背景简介。
             </p>
 
             <div class="hero__actions">
@@ -68,8 +68,8 @@
                 <strong id="summaryLanguage">--</strong>
               </article>
               <article class="summary-card">
-                <span class="summary-card__label">新项目窗口</span>
-                <strong>14 天</strong>
+                <span class="summary-card__label">中国作者</span>
+                <strong id="summaryChinaOwners">--</strong>
               </article>
               <article class="summary-card">
                 <span class="summary-card__label">最高星标</span>
@@ -81,18 +81,18 @@
 
         <section class="control-bar">
           <div class="search-box">
-            <label class="search-box__label" for="searchInput">搜索项目 / 作者 / 描述</label>
+            <label class="search-box__label" for="searchInput">搜索项目 / 作者 / 描述 / 中文标签</label>
             <input
               id="searchInput"
               class="search-box__input"
               type="search"
-              placeholder="例如：agent、rust、openai、tooling"
+              placeholder="例如：AI、具身、agent、rust、中文作者"
             />
           </div>
 
           <div class="filters">
-            <span class="filters__label">语言筛选</span>
-            <div id="languageFilters" class="chip-group"></div>
+            <span class="filters__label">标签筛选</span>
+            <div id="categoryFilters" class="chip-group"></div>
           </div>
         </section>
 
@@ -114,7 +114,7 @@
               <h2>双榜单总览</h2>
             </div>
             <p class="section-heading__desc">
-              左边看长期统治力，右边看新项目势能。搜索和语言筛选会同时作用于两个榜单。
+              每张卡片都会展示中文简介、标签归类，以及作者是否来自中国。
             </p>
           </div>
 
@@ -158,7 +158,19 @@
           <span class="project-card__rank"></span>
         </div>
 
+        <div class="project-card__tags">
+          <span class="badge badge--category"></span>
+          <span class="badge badge--country" hidden></span>
+        </div>
+
         <p class="project-card__desc"></p>
+        <p class="project-card__desc-zh"></p>
+
+        <div class="project-card__author" hidden>
+          <p class="project-card__author-title">中国作者</p>
+          <p class="project-card__author-name"></p>
+          <p class="project-card__author-bio"></p>
+        </div>
 
         <div class="project-card__stats">
           <span class="stat-pill stat-pill--star"></span>
@@ -183,6 +195,7 @@
         </div>
         <h3 class="spotlight-card__title"></h3>
         <p class="spotlight-card__desc"></p>
+        <p class="spotlight-card__desc-zh"></p>
         <div class="spotlight-card__stats"></div>
       </article>
     </template>
