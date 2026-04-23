@@ -1,4 +1,4 @@
-const DATA_URL = "./projects.json";
+const DATA_URL = "./data/projects.json";
 
 const state = {
   payload: null,
@@ -8,6 +8,7 @@ const state = {
 
 const topStarredList = document.querySelector("#topStarredList");
 const risingList = document.querySelector("#risingList");
+const embodiedList = document.querySelector("#embodiedList");
 const spotlightGrid = document.querySelector("#spotlightGrid");
 const generatedAt = document.querySelector("#generatedAt");
 const refreshButton = document.querySelector("#refreshButton");
@@ -19,6 +20,7 @@ const summaryChinaOwners = document.querySelector("#summaryChinaOwners");
 const summaryStars = document.querySelector("#summaryStars");
 const topBoardCount = document.querySelector("#topBoardCount");
 const risingBoardCount = document.querySelector("#risingBoardCount");
+const embodiedBoardCount = document.querySelector("#embodiedBoardCount");
 const projectTemplate = document.querySelector("#projectCardTemplate");
 const spotlightTemplate = document.querySelector("#spotlightCardTemplate");
 
@@ -40,7 +42,11 @@ function renderMessage(target, className, message) {
 }
 
 function getCombinedProjects(payload) {
-  return [...(payload.topStarred ?? []), ...(payload.rising ?? [])];
+  return [
+    ...(payload.topStarred ?? []),
+    ...(payload.rising ?? []),
+    ...(payload.embodiedTop ?? []),
+  ];
 }
 
 function normalizeText(project) {
@@ -205,18 +211,22 @@ function renderBoards() {
 
   const filteredTop = filterProjects(state.payload.topStarred ?? []);
   const filteredRising = filterProjects(state.payload.rising ?? []);
+  const filteredEmbodied = filterProjects(state.payload.embodiedTop ?? []);
 
   topBoardCount.textContent = `${filteredTop.length} 个结果`;
   risingBoardCount.textContent = `${filteredRising.length} 个结果`;
+  embodiedBoardCount.textContent = `${filteredEmbodied.length} 个结果`;
 
   renderProjectCards(topStarredList, filteredTop, "TOP");
   renderProjectCards(risingList, filteredRising, "NEW");
+  renderProjectCards(embodiedList, filteredEmbodied, "EMBODIED");
   renderSpotlights(filteredTop, filteredRising);
 }
 
 async function loadData() {
   renderMessage(topStarredList, "loading", "正在加载最高星级项目...");
   renderMessage(risingList, "loading", "正在加载最新热点项目...");
+  renderMessage(embodiedList, "loading", "正在加载具身智能历史榜单...");
   renderMessage(spotlightGrid, "loading", "正在准备今日焦点...");
 
   try {
@@ -242,6 +252,7 @@ async function loadData() {
       "暂时无法读取榜单数据，请确认已运行每日更新脚本或已部署自动任务。"
     );
     renderMessage(risingList, "error-state", `读取失败：${error.message}`);
+    renderMessage(embodiedList, "error-state", "具身智能榜单暂时不可用。");
     renderMessage(spotlightGrid, "error-state", "今日焦点暂时不可用。");
   }
 }

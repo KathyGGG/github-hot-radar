@@ -5,6 +5,7 @@ import { enrichProject } from "./project-enrichment.mjs";
 const OUTPUT_PATH = resolve("data", "projects.json");
 const API_URL = "https://api.github.com/search/repositories";
 const PER_PAGE = 12;
+const EMBODIED_PER_PAGE = 10;
 const ownerCache = new Map();
 
 function daysAgo(days) {
@@ -27,12 +28,12 @@ function buildHeaders() {
   return headers;
 }
 
-async function fetchRepositories(query, sort) {
+async function fetchRepositories(query, sort, perPage = PER_PAGE) {
   const url = new URL(API_URL);
   url.searchParams.set("q", query);
   url.searchParams.set("sort", sort);
   url.searchParams.set("order", "desc");
-  url.searchParams.set("per_page", String(PER_PAGE));
+  url.searchParams.set("per_page", String(perPage));
 
   const response = await fetch(url, {
     headers: buildHeaders(),
@@ -113,15 +114,23 @@ async function main() {
     `created:>=${daysAgo(14)} stars:>50 archived:false mirror:false`,
     "stars"
   );
+  const rawEmbodied = await fetchRepositories(
+    "(robotics OR humanoid OR embodied) stars:>200 archived:false mirror:false",
+    "stars",
+    EMBODIED_PER_PAGE
+  );
 
   const payload = {
     generatedAt: new Date().toISOString(),
     criteria: {
       topStarred: "stars:>50000 archived:false mirror:false",
       rising: `created:>=${daysAgo(14)} stars:>50 archived:false mirror:false`,
+      embodiedTop:
+        "(robotics OR humanoid OR embodied) stars:>200 archived:false mirror:false",
     },
     topStarred: await enrichRepositories(rawTopStarred),
     rising: await enrichRepositories(rawRising),
+    embodiedTop: await enrichRepositories(rawEmbodied),
   };
 
   await mkdir(dirname(OUTPUT_PATH), { recursive: true });
